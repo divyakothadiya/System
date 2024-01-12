@@ -5,67 +5,108 @@ import {
   TextField,
   Typography,
   LinearProgress,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import LoginOutlinedIcon from "@mui/icons-material/LoginOutlined";
 import HowToRegOutlinedIcon from "@mui/icons-material/HowToRegOutlined";
 import { useNavigate } from "react-router-dom";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
-const SignUp = () => {
+const LogInAndSignUp = () => {
   const [isSignup, setIsSignup] = useState(false);
-  const [inputs, setInputs] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     address: "",
     contactNo: "",
+    showPassword: false,
   });
-  const [passwordError, setPasswordError] = useState("");
+  const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
   const navigate = useNavigate();
   const handleChange = (e) => {
     if (e.target.name === "password") {
-      // if (e.target.type === "password") {
-      //   e.target.type = "text";
-      // } else {
-      //   e.target.type = "password";
-      // }
-      passwordvalidation(e.target.value);
+      const strength = calculatePasswordStrength(e.target.value);
+      setPasswordStrength(strength);
+      validatePassword(e.target.value);
     }
-    setInputs((prevState) => ({
+    setFormData((prevState) => ({
       ...prevState,
       [e.target.name]: e.target.value,
     }));
   };
-  const passwordvalidation = (value) => {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/; // Password criteria
-    if (!passwordRegex.test(value)) {
-      setPasswordError(
-        "Password should have at least 8 characters, Lowe case, Upper case, numeric and Special character"
-      );
-    } else {
-      setPasswordError("");
-    }
-    // Calculate password strength based on length
-    const strength = Math.min(value.length / 8, 1);
-    setPasswordStrength(strength);
+  const handleShowPassword = () => {
+    setFormData({ ...formData, showPassword: !formData.showPassword });
   };
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength === 1) {
-      return "success";
-    } else if (passwordStrength >= 0.5) {
-      return "warning";
+  const validatePassword = (password) => {
+    if (password.length === 0) {
+      setErrors({});
+    } else if (password.length < 8) {
+      setErrors({ password: "Password should be at least 8 characters" });
+    } else if (passwordStrength < 4) {
+      setErrors({
+        password:
+          "Password should contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+      });
+    } else if (password.length > 0 && passwordStrength === 4) {
+      setErrors({});
     } else {
-      return "error";
+      setErrors({});
     }
   };
+
+  const calculatePasswordStrength = (password) => {
+    let strength = 0;
+    if (password.match(/[A-Z]/)) strength++;
+    if (password.match(/[a-z]/)) strength++;
+    if (password.match(/[0-9]/)) strength++;
+    if (password.match(/[^A-Za-z0-9]/)) strength++;
+    return strength;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(inputs);
-    navigate("/editUserDetails");
+
+    // Check if any of the required fields are empty
+    const requiredFields = isSignup
+      ? ["name", "email", "password", "address", "contactNo"]
+      : ["email", "password"];
+
+    const emptyFieldErrors = {};
+    requiredFields.forEach((field) => {
+      if (!formData[field].trim()) {
+        emptyFieldErrors[field] = `${
+          field.charAt(0).toUpperCase() + field.slice(1)
+        } is required`;
+      }
+    });
+
+    if (Object.keys(emptyFieldErrors).length > 0) {
+      setErrors(emptyFieldErrors);
+      return;
+    }
+
+    const strength = calculatePasswordStrength(formData.password);
+    if (formData.password.length < 8) {
+      setErrors({ password: "Password should be at least 8 characters" });
+    } else if (strength < 4) {
+      setErrors({
+        password:
+          "Password should contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+      });
+    } else {
+      console.log("Form submitted:", formData);
+      resetState();
+      setErrors({});
+      navigate("/editUserDetails");
+    }
   };
   const resetState = () => {
     setIsSignup(!isSignup);
-    setInputs({
+    setFormData({
       name: "",
       email: "",
       password: "",
@@ -94,70 +135,92 @@ const SignUp = () => {
           </Typography>
           {isSignup && (
             <TextField
+              fullWidth
               onChange={handleChange}
               name="name"
-              value={inputs.name}
+              value={formData.name}
               margin="normal"
               type={"text"}
               variant="outlined"
               label="Name"
+              error={!!errors.name}
+              helperText={errors.name}
             />
           )}
           {isSignup && (
             <TextField
+              fullWidth
               onChange={handleChange}
               name="address"
-              value={inputs.address}
+              value={formData.address}
               margin="normal"
               type={"text"}
               variant="outlined"
               label="Address"
+              error={!!errors.address}
+              helperText={errors.address}
             />
           )}
           {isSignup && (
             <TextField
+              fullWidth
               onChange={handleChange}
               name="contactNo"
-              value={inputs.contactNo}
+              value={formData.contactNo}
               margin="normal"
               type={"text"}
               variant="outlined"
               label="ContactNo"
+              error={!!errors.contactNo}
+              helperText={errors.contactNo}
             />
           )}
           <TextField
+            fullWidth
             onChange={handleChange}
             name="email"
-            value={inputs.email}
+            value={formData.email}
             margin="normal"
             type={"email"}
             variant="outlined"
             label="Email"
+            error={!!errors.email}
+            helperText={errors.email}
           />
-          <div margin="normal" variant="outlined">
-            <TextField
-              onChange={handleChange}
-              name="password"
-              value={inputs.password}
-              margin="normal"
-              type={"password"}
-              variant="outlined"
-              label="Password"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              error={passwordError.length > 0}
-              helperText={passwordError}
-            />
-            {/* <TextField type="checkbox" onClick={handleChange} label="show password" margin="normal" variant="outlined"/> */}
-            {/* <input type="checkbox" onclick="myFunction()">Show Password</input> */}
-            <LinearProgress
-              variant="outlined"
-              margin="normal"
-              value={passwordStrength * 100}
-              color={getPasswordStrengthColor()}
-            />
-          </div>
+          <TextField
+            label="Password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            type={formData.showPassword ? "text" : "password"}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            error={!!errors.password}
+            helperText={errors.password}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={handleShowPassword} edge="end">
+                    {formData.showPassword ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+          {formData.password && (
+            <Box>
+              <Typography variant="caption">Password Strength</Typography>
+              <LinearProgress
+                variant="determinate"
+                value={(passwordStrength / 4) * 100}
+              />
+            </Box>
+          )}
           <Button
             endIcon={
               isSignup ? <HowToRegOutlinedIcon /> : <LoginOutlinedIcon />
@@ -184,4 +247,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default LogInAndSignUp;
