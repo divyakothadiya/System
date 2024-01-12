@@ -6,6 +6,7 @@ import LogInAndSignUp from './LoginAndSignUp/signup';
 import LogIn from './LoginAndSignUp/login';
 import DynamicFilterMapping from './DynamicFiltering/dynamicFilterMapping';
 import PersistentDrawerLeft from './NavBar/navigationbar';
+import UserComponent from './UserProfile/userComponent';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route exact path="/login"  element={<LogIn/>} />
           <Route exact path="/filter"  element={<DynamicFilterMapping/>} />
           <Route exact path="/navbar"  element={<PersistentDrawerLeft/>} />
+          <Route exact path="/userdetails"  element={<UserComponent/>} />
       </Routes>
     </Router>
   );
